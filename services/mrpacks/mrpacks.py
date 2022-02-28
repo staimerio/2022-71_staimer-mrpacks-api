@@ -30,6 +30,7 @@ URL_MUYSEXY_POST = app.apps['backend']['muysexy']['base_url'] + \
     app.apps['backend']['muysexy']['posts']
 URL_SENDFILES_WEB = app.config.get('URL_SENDFILES_WEB')
 WEBSITE_URL = app.config.get('WEBSITE_URL')
+WEBSITE_POST_TYPE = app.config.get('WEBSITE_POST_TYPE')
 
 
 def get_items_from_website(limit, page):
@@ -78,7 +79,7 @@ def build_items_to_upload(
     for _item in items:
         """Find novel in db"""
         _oldpost = wordpress.search_post_by_slug(
-            _item['slug'], headers=headers
+            _item['slug'], headers=headers, post_type=WEBSITE_POST_TYPE
         )
         if _oldpost:
             continue
@@ -189,6 +190,7 @@ def publish_item_wp(
             categories=_categories,
             headers=headers,
             featured_media_url=_cover_url,
+            post_type=WEBSITE_POST_TYPE
         )
         """Check if is a valid post"""
         if not _post or not _post['valid'] or not 'id' in _post['data']:
@@ -270,11 +272,7 @@ def publish_items(
             """Save chapters in database"""
             _session.add(_item)
             _session.flush()
-            """Save in database"""
-        else:
-            print("*********_item.value = *********")
-            _item.value = str(int(_item.value)+1)
-        _session.commit()
+            """Save in database"""        
 
         _created_posts = upload_items(
             limit,
@@ -285,6 +283,11 @@ def publish_items(
             credential=credential
         )
 
+        if(len(_created_posts) == 0):
+            print("*********_item.value = *********")
+            _item.value = str(int(_item.value)+1)
+
+        _session.commit()
         _session.close()
 
     _data_respose = {
