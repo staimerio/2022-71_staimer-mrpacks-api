@@ -30,7 +30,8 @@ def create_post(
     props_resources=[],
     headers=None,
     post_type=None,
-    featured_media_url=None
+    featured_media_url=None,
+    props=None,
 ):
     """Publish a new post on the website"""
 
@@ -46,6 +47,7 @@ def create_post(
         u"props_resources": props_resources,
         u"post_type": post_type,
         u"featured_media_url": featured_media_url,
+        u"props": props,
     }
 
     """Build epub file"""

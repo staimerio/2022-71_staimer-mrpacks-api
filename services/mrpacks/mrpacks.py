@@ -136,7 +136,7 @@ def build_items_to_upload(
 
 def build_post_content(item, description_upload, cover_url, title, credential):
     _links_str = ""
-    if not item['links']:
+    if 'links' not in item or not item['links']:
         _upload = zip.zip_images(
             item['images'],
             description_upload,
@@ -209,22 +209,45 @@ def publish_item_wp(
             _title,
             credential
         )
-        _item['genres'].append('Packs')
         _categories = [
+            {
+                u"name": "Packs XXX",
+                u"slug": "packs xxx",
+            }
+        ]
+        _taxonomy_categories = {
+            u'taxonomy': 'category',
+            u'items': _categories
+        }
+
+        if not _item['genres']:
+            _item['genres'].append('Only fans')
+        _tags = [
             {
                 u"name": _genre,
                 u"slug": slugify(_genre),
             } for _genre in _item['genres']
         ]
+        _taxonomy_tags = {
+            u'taxonomy': 'post_tag',
+            u'items': _tags
+        }
+        
+        _props = {
+            u'taxonomy_items': [
+                _taxonomy_categories,
+                _taxonomy_tags
+            ]
+        }
         """Create the post"""
         _post = wordpress.create_post(
             title=_title,
             slug=_item['slug'],
             content=_content,
-            categories=_categories,
             headers=headers,
             featured_media_url=_cover_url,
-            post_type=WEBSITE_POST_TYPE
+            post_type=WEBSITE_POST_TYPE,
+            props=_props,
         )
         """Check if is a valid post"""
         if not _post or not _post['valid'] or not 'id' in _post['data']:
@@ -291,7 +314,7 @@ def publish_items(
         credential=credential,
         origin=origin,
     )
-    print("*********len(_items)*********")
+    print("*********len(_items):*********" + str(len(_created_posts)))
     """Check if almost one item was published"""
     if(len(_created_posts) == 0):
         """Find in database"""
