@@ -11,6 +11,7 @@ WEBSITE_LIMIT_LATEST = app.config.get('WEBSITE_LIMIT_LATEST')
 WEBSITE_PAGES_LATEST = app.config.get('WEBSITE_PAGES_LATEST')
 DESCRIPTION_UPLOAD = app.config.get('DESCRIPTION_UPLOAD')
 STORAGE_CREDENTIALS_DEFAULT = app.config.get('STORAGE_CREDENTIALS_DEFAULT')
+WEBSITE_ORIGIN = app.config.get('WEBSITE_ORIGIN')
 
 def publish_latest(req: Request, res: Response, next: Next):
     _headers = {}
@@ -52,7 +53,8 @@ def publish_latest(req: Request, res: Response, next: Next):
         limit_publish=limit_publish,
         description_upload=req.param('description_upload', DESCRIPTION_UPLOAD),
         page=req.param('page', WEBSITE_PAGES_LATEST, callback=int),
-        credential=req.headers.get('credential', STORAGE_CREDENTIALS_DEFAULT)
+        credential=req.headers.get('credential', STORAGE_CREDENTIALS_DEFAULT),
+        origin=req.param('origin', WEBSITE_ORIGIN)
     )
     """Check if exist an error"""
     if result['valid'] is False:

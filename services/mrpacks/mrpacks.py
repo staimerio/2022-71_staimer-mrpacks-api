@@ -20,6 +20,7 @@ from services.zip import zip
 # Models
 from models import Scrapper
 import services.general.constants as constants
+import services.mrpacks.photos as photos
 
 # Constants
 WEBSITE_LIMIT_LATEST = app.config.get('WEBSITE_LIMIT_LATEST')
@@ -31,6 +32,19 @@ URL_MUYSEXY_POST = app.apps['backend']['muysexy']['base_url'] + \
 URL_SENDFILES_WEB = app.config.get('URL_SENDFILES_WEB')
 WEBSITE_URL = app.config.get('WEBSITE_URL')
 WEBSITE_POST_TYPE = app.config.get('WEBSITE_POST_TYPE')
+
+
+def get_items_from_origin(limit, page, origin=None):
+    if origin == constants.ORIGIN['muysexy']:
+        return get_items_from_website(limit, page)
+    elif origin == constants.ORIGIN['mrpacks']:
+        _items = photos.get_latest(
+            limit=limit,
+            page=page,
+        )
+        return success_response(data={u'items': _items['data']})
+    else:
+        return get_items_from_website(limit, page, origin)
 
 
 def get_items_from_website(limit, page):
@@ -49,6 +63,22 @@ def get_items_from_website(limit, page):
     _result_json = _result.json()
     """Return novels"""
     return _result_json
+
+
+def get_publication_from_origin(url, id, origin):
+    if origin == constants.ORIGIN['muysexy']:
+        """Get all chapters of the novels without ids that exists"""
+        return get_mirrors_from_website(
+            url_base=URL_MUYSEXY_POST,
+            url=url,
+        )
+    elif origin == constants.ORIGIN['mrpacks']:
+        _publication = photos.get_info_post(
+            id=id
+        )
+        return _publication['data']
+    else:
+        return None
 
 
 def get_mirrors_from_website(url_base, url):
@@ -72,6 +102,7 @@ def build_items_to_upload(
     items,
     headers,
     limit_publish,
+    origin,
 ):
     """Define all variables"""
     _items = []
@@ -83,13 +114,9 @@ def build_items_to_upload(
         )
         if _oldpost:
             continue
-        """Define the url"""
-        _url_base = URL_MUYSEXY_POST
-        """Get all chapters of the novels without ids that exists"""
-        _publication = get_mirrors_from_website(
-            url_base=_url_base,
-            url=_item['url'],
-        )
+
+        _publication = get_publication_from_origin(
+            _item['url'], _item['id'] if 'id' in _item else None, origin)
         """Check if it has any problem"""
         if not _publication:
             continue
@@ -107,41 +134,48 @@ def build_items_to_upload(
     return _items
 
 
-def build_post_content(item, description_upload, cover_url, title, credential):    
-    _upload = zip.zip_images(
-        item['images'],
-        description_upload,
-        item['slug'],
-        credential
-    )
-    # _upload={
-    #     'valid':True,
-    #     'data':{            
-    #         'description':'Para más contenido visítanos en MrPacks.com',
-    #         'credential':None,
-    #         'folder':116452,
-    #         'platform':1,
-    #         'code':'1d9c99e470cd11ec99360242ac120004',
-    #         'items':[]
-    #     }
-    # }
-    if _upload['valid'] is False:
+def build_post_content(item, description_upload, cover_url, title, credential):
+    _links_str = ""
+    if not item['links']:
+        _upload = zip.zip_images(
+            item['images'],
+            description_upload,
+            item['slug'],
+            credential
+        )
+        if _upload['valid'] is False:
+            return None
+        _links_str = """
+            <p style="text-align: center;">
+            <a href="{1}/#/downloads/{2}" target="_blank" rel="noopener noreferrer">
+                    <img class="alignnone size-full wp-image-5541" src="/wp-content/uploads/2021/11/mega-1-1.png" alt="{0}" width="300" height="60" />
+                </a>
+            </p>
+            """.format(
+            title,
+            URL_SENDFILES_WEB,
+            _upload['data']['code']
+        )
+    else:
+        for _link in item['links']:
+            _links_str = """
+            <p style="text-align: center;">
+                <a href="{1}" target="_blank" rel="noopener noreferrer">
+                    <img class="alignnone size-full wp-image-5541" src="/wp-content/uploads/2021/11/mega-1-1.png" alt="{0}" width="300" height="60" />
+                </a>
+            </p>
+            """.format(title, _link)
+    if _links_str == "":
         return None
-
     _content = """
         <p style="text-align: center;">{0} Pack XXX .</p>
         <img class="aligncenter wp-image-2815" src="{1}" alt="{0}" />
         <p style="text-align: center;">DESCARGA AQUI:</p>
-        <p style="text-align: center;">
-            <a href="{2}/#/downloads/{3}" target="_blank" rel="noopener noreferrer">
-                <img class="alignnone size-full wp-image-5541" src="/wp-content/uploads/2021/11/mega-1-1.png" alt="{0}" width="300" height="60" />
-            </a>
-        </p>
+        {2}
     """.format(
         title,
         item['images'][0],
-        URL_SENDFILES_WEB,
-        _upload['data']['code'],
+        _links_str,
     )
 
     return _content
@@ -166,17 +200,17 @@ def publish_item_wp(
         _cover = images.upload_images_from_urls(
             urls=[_item['cover']],
         )
-        _cover_url=_cover['data']['images'][-1]['link']
+        _cover_url = _cover['data']['images'][-1]['link']
         """Generate content"""
         _content = build_post_content(
-            _item, 
-            description_upload, 
-            _cover_url, 
+            _item,
+            description_upload,
+            _cover_url,
             _title,
             credential
         )
         _item['genres'].append('Packs')
-        _categories=[
+        _categories = [
             {
                 u"name": _genre,
                 u"slug": slugify(_genre),
@@ -208,11 +242,13 @@ def upload_items(
     limit_publish,
     page,
     description_upload,
-    credential
+    credential,
+    origin,
 ):
-    _items = get_items_from_website(
+    _items = get_items_from_origin(
         limit=limit,
         page=page,
+        origin=origin,
     )
 
     if _items['valid'] is False:
@@ -220,12 +256,13 @@ def upload_items(
     _builded_items = build_items_to_upload(
         _items['data']['items'],
         headers,
-        limit_publish
+        limit_publish,
+        origin=origin,
     )
 
     if not _builded_items:
         return []
-        
+
     """Publish or update on website"""
     _created_posts = publish_item_wp(
         _builded_items,
@@ -243,6 +280,7 @@ def publish_items(
     description_upload,
     page=1,
     credential=None,
+    origin=None
 ):
     _created_posts = upload_items(
         limit,
@@ -250,7 +288,8 @@ def publish_items(
         limit_publish,
         page=page,
         description_upload=description_upload,
-        credential=credential
+        credential=credential,
+        origin=origin,
     )
     print("*********len(_items)*********")
     """Check if almost one item was published"""
@@ -272,7 +311,7 @@ def publish_items(
             """Save chapters in database"""
             _session.add(_item)
             _session.flush()
-            """Save in database"""        
+            """Save in database"""
 
         _created_posts = upload_items(
             limit,
@@ -280,7 +319,8 @@ def publish_items(
             limit_publish,
             page=_item.value,
             description_upload=description_upload,
-            credential=credential
+            credential=credential,
+            origin=origin,
         )
 
         if(len(_created_posts) == 0):

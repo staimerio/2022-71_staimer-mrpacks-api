@@ -4,3 +4,7 @@ TYPES = {
     u'music': 3,
     u'images': 4,
 }
+ORIGIN = {
+    u'muysexy': 'muysexy',
+    u'mrpacks': 'mrpacks',
+}
