@@ -232,12 +232,13 @@ def publish_item_wp(
             u'taxonomy': 'post_tag',
             u'items': _tags
         }
-        
+
         _props = {
             u'taxonomy_items': [
                 _taxonomy_categories,
                 _taxonomy_tags
-            ]
+            ],
+            u'featured_media_url': _cover_url,
         }
         """Create the post"""
         _post = wordpress.create_post(
@@ -245,7 +246,6 @@ def publish_item_wp(
             slug=_item['slug'],
             content=_content,
             headers=headers,
-            featured_media_url=_cover_url,
             post_type=WEBSITE_POST_TYPE,
             props=_props,
         )
