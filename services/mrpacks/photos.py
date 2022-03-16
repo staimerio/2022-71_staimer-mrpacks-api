@@ -166,7 +166,7 @@ def get_data_item_json(instance, item):
         """Get url"""
         _url = _data_item['href']
         """Check that the url exists"""
-        _title = item.find('h2').text
+        _title = item.find('h2').text.replace("Pack de ", "").replace(" gratis completo", "").replace(" {0}".format(WEBSITE_YEAR), "")
         return get_node_item(item['class'][3].split('post-')[-1], _url, _title, instance.year, instance.host, instance.site)
     except Exception as e:
         return None
