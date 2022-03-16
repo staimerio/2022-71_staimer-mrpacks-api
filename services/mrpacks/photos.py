@@ -21,7 +21,7 @@ from retic.services.general.urls import slugify
 # from models import Hentai, HentaiPost, Chapter, Image
 
 # Constants
-
+WEBSITE_YEAR = app.config.get('MRPACKS_YEAR')
 
 class MrPacks(object):
 
@@ -114,15 +114,21 @@ class MrPacks(object):
             _images.append(_url)
 
         _title = _soup.find("h1").text
+        _title = _title.replace("Pack de ", "").replace(" gratis completo", "").replace(" {0}".format(WEBSITE_YEAR), "")
 
-        _genres_box = _soup.find(class_="s-post-cat-links")
+        _genres_box = _soup.find(class_="bb-tags")
         _genres = [_genre.text.strip()
                    for _genre in _genres_box.find_all("a", href=True)]
+
+        _categories_box = _soup.find(class_="s-post-cat-links")
+        _categories = [_category.text.strip()
+                   for _category in _categories_box.find_all("a", href=True)]
 
         return {
             'title': _title,
             'cover': _cover,
             'genres': _genres,
+            'categories': _categories,
             "images": _images,
         }
 

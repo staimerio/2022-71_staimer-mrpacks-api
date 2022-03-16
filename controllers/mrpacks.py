@@ -39,7 +39,7 @@ def publish_latest(req: Request, res: Response, next: Next):
         u'oauth_consumer_secret': app.config.get('WP_OAUTH_CONSUMER_SECRET'),
         u'oauth_token': app.config.get('WP_OAUTH_TOKEN'),
         u'oauth_token_secret': app.config.get('WP_OAUTH_TOKEN_SECRET'),
-        u'base_url': app.config.get('WP_BASE_URL'),
+        u'base_url': req.headers.get('base_url', app.config.get('WP_BASE_URL')),
         u'without_oauth_session': '1',
     }
 

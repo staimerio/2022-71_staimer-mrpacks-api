@@ -32,6 +32,8 @@ URL_MUYSEXY_POST = app.apps['backend']['muysexy']['base_url'] + \
 URL_SENDFILES_WEB = app.config.get('URL_SENDFILES_WEB')
 WEBSITE_URL = app.config.get('WEBSITE_URL')
 WEBSITE_POST_TYPE = app.config.get('WEBSITE_POST_TYPE')
+WEBSITE_URL = app.config.get('WEBSITE_URL')
+WEBSITE_YEAR = app.config.get('MRPACKS_YEAR')
 
 
 def get_items_from_origin(limit, page, origin=None):
@@ -136,6 +138,7 @@ def build_items_to_upload(
 
 def build_post_content(item, description_upload, cover_url, title, credential):
     _links_str = ""
+    _download_img = "/descargar-pack-xxx-mega.png"
     if 'links' not in item or not item['links']:
         _upload = zip.zip_images(
             item['images'],
@@ -148,28 +151,33 @@ def build_post_content(item, description_upload, cover_url, title, credential):
         _links_str = """
             <p style="text-align: center;">
             <a href="{1}/#/downloads/{2}" target="_blank" rel="noopener noreferrer">
-                    <img class="alignnone size-full wp-image-5541" src="/wp-content/uploads/2021/11/mega-1-1.png" alt="{0}" width="300" height="60" />
+                    <img class="alignnone size-full wp-image-5541" src="{3}" alt="{0}" title="{0}" width="300" height="60" />
                 </a>
             </p>
             """.format(
             title,
             URL_SENDFILES_WEB,
-            _upload['data']['code']
+            _upload['data']['code'],
+            _download_img
         )
     else:
         for _link in item['links']:
             _links_str = """
             <p style="text-align: center;">
                 <a href="{1}" target="_blank" rel="noopener noreferrer">
-                    <img class="alignnone size-full wp-image-5541" src="/wp-content/uploads/2021/11/mega-1-1.png" alt="{0}" width="300" height="60" />
+                    <img class="alignnone size-full wp-image-5541" src="{2}" alt="{0}" title="{0}" width="300" height="60" />
                 </a>
             </p>
-            """.format(title, _link)
+            """.format(
+                title,
+                _link,
+                _download_img
+            )
     if _links_str == "":
         return None
     _content = """
-        <p style="text-align: center;">{0} Pack XXX .</p>
-        <img class="aligncenter wp-image-2815" src="{1}" alt="{0}" />
+        <p style="text-align: center;">{0} Pack XXX.</p>
+        <img class="aligncenter wp-image-2815" src="{1}" alt="{0}" title="{0}" />
         <p style="text-align: center;">DESCARGA AQUI:</p>
         {2}
     """.format(
@@ -196,7 +204,7 @@ def publish_item_wp(
     """For each novels do to the following"""
     for _item in items:
         """Generate title"""
-        _title = "Pack de {0} gratis completo".format(_item['title'])
+        _title = "Pack de {0} gratis completo {1}".format(_item['title'], WEBSITE_YEAR)
         _cover = images.upload_images_from_urls(
             urls=[_item['cover']],
         )
@@ -209,11 +217,13 @@ def publish_item_wp(
             _title,
             credential
         )
+        if not _item['categories']:
+            _item['categories'].append('Packs XXX')
         _categories = [
             {
-                u"name": "Packs XXX",
-                u"slug": "packs xxx",
-            }
+                u"name": _category,
+                u"slug": slugify(_category),
+            } for _category in _item['categories']
         ]
         _taxonomy_categories = {
             u'taxonomy': 'category',
