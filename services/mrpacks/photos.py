@@ -23,6 +23,7 @@ from retic.services.general.urls import slugify
 # Constants
 WEBSITE_YEAR = app.config.get('MRPACKS_YEAR')
 
+
 class MrPacks(object):
 
     def __init__(self):
@@ -114,16 +115,19 @@ class MrPacks(object):
             _images.append(_url)
 
         _title = _soup.find("h1").text
-        _title = _title.replace("Pack de ", "").replace(" gratis completo", "").replace(" {0}".format(WEBSITE_YEAR), "")
+        _title = _title.replace("Pack de ", "").replace(
+            " gratis completo", "").replace(" {0}".format(WEBSITE_YEAR), "")
 
         _genres_box = _soup.find(class_="bb-tags")
         _genres = [_genre.text.strip()
-                   for _genre in _genres_box.find_all("a", href=True)]
+                   for _genre in _genres_box.find_all("a", href=True)] if _genres_box else []
 
         _categories_box = _soup.find(class_="s-post-cat-links")
         _categories = [_category.text.strip()
-                   for _category in _categories_box.find_all("a", href=True)]
+                       for _category in _categories_box.find_all("a", href=True)]
 
+        if not _categories:
+            _categories = ["Packs XXX"]
         return {
             'title': _title,
             'cover': _cover,
@@ -166,7 +170,8 @@ def get_data_item_json(instance, item):
         """Get url"""
         _url = _data_item['href']
         """Check that the url exists"""
-        _title = item.find('h2').text.replace("Pack de ", "").replace(" gratis completo", "").replace(" {0}".format(WEBSITE_YEAR), "")
+        _title = item.find('h2').text.replace("Pack de ", "").replace(
+            " gratis completo", "").replace(" {0}".format(WEBSITE_YEAR), "")
         return get_node_item(item['class'][3].split('post-')[-1], _url, _title, instance.year, instance.host, instance.site)
     except Exception as e:
         return None

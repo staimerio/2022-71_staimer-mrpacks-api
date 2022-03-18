@@ -204,7 +204,8 @@ def publish_item_wp(
     """For each novels do to the following"""
     for _item in items:
         """Generate title"""
-        _title = "Pack de {0} gratis completo {1}".format(_item['title'], WEBSITE_YEAR)
+        _title = "Pack de {0} gratis completo {1}".format(
+            _item['title'], WEBSITE_YEAR)
         _cover = images.upload_images_from_urls(
             urls=[_item['cover']],
         )
@@ -218,7 +219,7 @@ def publish_item_wp(
             credential
         )
         if not _item['categories']:
-            _item['categories'].append('Packs XXX')
+            _item['categories'] = ['Packs XXX']
         _categories = [
             {
                 u"name": _category,
