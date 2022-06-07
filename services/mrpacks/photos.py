@@ -108,11 +108,14 @@ class MrPacks(object):
 
         _images_raw = _content.find_all(class_='aligncenter')
 
-        for _image_raw in [_images_raw.pop()]:
-            _url = _image_raw.attrs['data-lazy-src'] if 'data-lazy-src' in _image_raw.attrs else _image_raw['src']
-            if "grupo" in _url:
-                continue
-            _images.append(_url)
+        if not _images_raw:
+            _images.append(_cover)
+        else:
+            for _image_raw in [_images_raw.pop()]:
+                _url = _image_raw.attrs['data-lazy-src'] if 'data-lazy-src' in _image_raw.attrs else _image_raw['src']
+                if "grupo" in _url:
+                    continue
+                _images.append(_url)
 
         _title = _soup.find("h1").text
         _title = _title.replace("Pack de ", "").replace(
