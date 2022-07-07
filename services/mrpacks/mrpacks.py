@@ -9,6 +9,8 @@ import requests
 # Time
 from time import sleep
 
+# Time
+from datetime import datetime
 # Services
 from retic.services.responses import success_response, error_response
 from retic.services.general.urls import slugify
@@ -32,7 +34,6 @@ URL_MUYSEXY_POST = app.apps['backend']['muysexy']['base_url'] + \
 URL_SENDFILES_WEB = app.config.get('URL_SENDFILES_WEB')
 WEBSITE_URL = app.config.get('WEBSITE_URL')
 WEBSITE_POST_TYPE = app.config.get('WEBSITE_POST_TYPE')
-WEBSITE_URL = app.config.get('WEBSITE_URL')
 WEBSITE_YEAR = app.config.get('MRPACKS_YEAR')
 
 
@@ -314,40 +315,47 @@ def publish_items(
     description_upload,
     page=1,
     credential=None,
-    origin=None
+    origin=None,
+    wp_url=None,
 ):
-    _created_posts = upload_items(
-        limit,
-        headers,
-        limit_publish,
-        page=page,
-        description_upload=description_upload,
-        credential=credential,
-        origin=origin,
-    )
-    print("*********len(_items):*********" + str(len(_created_posts)))
-    """Check if almost one item was published"""
-    if(len(_created_posts) == 0):
-        """Find in database"""
-        _session = app.apps.get("db_sqlalchemy")()
-        _item = _session.query(Scrapper).\
-            filter(Scrapper.key == WEBSITE_URL, Scrapper.type == constants.TYPES['images']).\
-            first()
 
-        print("*********if _item is None*********")
+    _items = []
+    """Find in database"""
+    _session = app.apps.get("db_sqlalchemy")()
+    _item = _session.query(Scrapper).\
+        filter(Scrapper.key == wp_url, Scrapper.type == constants.TYPES['images']).\
+        first()
+
+    _date = datetime.now()
+
+    if not _item or (_item.created_at.year != _date.year or _item.created_at.day != _date.day):
+        print("*********scrapper_movies_publish*********")
+        """Variables"""
+        _items = upload_items(
+            limit,
+            headers,
+            limit_publish,
+            page=page,
+            description_upload=description_upload,
+            credential=credential,
+            origin=origin,
+        )
+    
+    print("*********len(_items):*********" + str(len(_items)))
+    """Check if almost one item was published"""
+    if(len(_items) == 0):
         if _item is None:
             print("*********_item = Scrapper*********")
             _item = Scrapper(
-                key=WEBSITE_URL,
+                key=wp_url,
                 type=constants.TYPES['images'],
                 value=page+1
             )
             """Save chapters in database"""
             _session.add(_item)
             _session.flush()
-            """Save in database"""
 
-        _created_posts = upload_items(
+        _items = upload_items(
             limit,
             headers,
             limit_publish,
@@ -357,7 +365,7 @@ def publish_items(
             origin=origin,
         )
 
-        if(len(_created_posts) == 0):
+        if(len(_items) == 0):
             print("*********_item.value = *********")
             _item.value = str(int(_item.value)+1)
 
@@ -365,7 +373,7 @@ def publish_items(
         _session.close()
 
     _data_respose = {
-        u"items":  _created_posts
+        u"items":  _items
     }
     return success_response(
         data=_data_respose

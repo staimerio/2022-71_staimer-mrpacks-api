@@ -54,7 +54,8 @@ def publish_latest(req: Request, res: Response, next: Next):
         description_upload=req.param('description_upload', DESCRIPTION_UPLOAD),
         page=req.param('page', WEBSITE_PAGES_LATEST, callback=int),
         credential=req.headers.get('credential', STORAGE_CREDENTIALS_DEFAULT),
-        origin=req.param('origin', WEBSITE_ORIGIN)
+        origin=req.param('origin', WEBSITE_ORIGIN),
+        wp_url=req.param('wp_url'),
     )
     """Check if exist an error"""
     if result['valid'] is False:
