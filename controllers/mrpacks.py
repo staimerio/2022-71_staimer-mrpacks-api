@@ -43,6 +43,8 @@ def publish_latest(req: Request, res: Response, next: Next):
         u'without_oauth_session': '1',
     }
 
+    print("_headers", _headers)
+
     limit_publish=req.param(
         'limit_publish', app.config.get('WEBSITE_LIMIT_PUBLISH'),  callback=int)
     
