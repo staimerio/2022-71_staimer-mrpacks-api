@@ -207,6 +207,7 @@ def publish_item_wp(
         """Generate title"""
         _title = "Pack de {0} gratis completo {1}".format(
             _item['title'], WEBSITE_YEAR)
+        print(_title)
         _cover = images.upload_images_from_urls(
             urls=[_item['cover']],
         )
@@ -252,6 +253,7 @@ def publish_item_wp(
             ],
             u'featured_media_url': _cover_url,
         }
+        print("create_post")
         """Create the post"""
         _post = wordpress.create_post(
             title=_title,
@@ -280,14 +282,17 @@ def upload_items(
     credential,
     origin,
 ):
+    print("get_items_from_origin")
     _items = get_items_from_origin(
         limit=limit,
         page=page,
         origin=origin,
     )
 
+
     if _items['valid'] is False:
         return []
+    print("build_items_to_upload")
     _builded_items = build_items_to_upload(
         _items['data']['items'],
         headers,
@@ -298,6 +303,7 @@ def upload_items(
     if not _builded_items:
         return []
 
+    print("publish_item_wp")
     """Publish or update on website"""
     _created_posts = publish_item_wp(
         _builded_items,
