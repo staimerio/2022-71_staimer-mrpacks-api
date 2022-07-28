@@ -39,6 +39,8 @@ def upload_images_from_urls(
         u"bottom_crop": bottom_crop,
     }
 
+    print(URL_IMAGES_REMOTE)
+
     """Upload images"""
     _images = requests.post(
         URL_IMAGES_REMOTE,
