@@ -50,6 +50,7 @@ def create_post(
         u"props": props,
     }
 
+    print(headers)
     """Build epub file"""
     _post = requests.post(
         URL_WORDPRESS_POSTS,

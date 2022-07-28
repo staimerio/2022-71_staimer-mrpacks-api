@@ -112,15 +112,18 @@ def build_items_to_upload(
     """For each novel do the following"""
     for _item in items:
         """Find novel in db"""
+        print("search_post_by_slug")
         _oldpost = wordpress.search_post_by_slug(
             _item['slug'], headers=headers, post_type=WEBSITE_POST_TYPE
         )
         if _oldpost:
             continue
 
+        print("get_publication_from_origin")
         _publication = get_publication_from_origin(
             _item['url'], _item['id'] if 'id' in _item else None, origin)
         """Check if it has any problem"""
+        print("_publication")
         if not _publication:
             continue
 
