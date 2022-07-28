@@ -163,6 +163,8 @@ def get_data_items_raw(instance, page=0):
     """Format the response"""
     _soup = BeautifulSoup(_req.content, 'html.parser')
     _data_raw = _soup.find(id='post-items')
+    if not _data_raw:
+        return []
     return _data_raw.find_all(class_='post')
 
 
