@@ -212,6 +212,7 @@ def publish_item_wp(
             urls=[_item['cover']],
         )
         _cover_url = _cover['data']['images'][-1]['link']
+        print(_cover_url)
         """Generate content"""
         _content = build_post_content(
             _item,
