@@ -329,7 +329,7 @@ def publish_items(
     _date = datetime.now()
 
     if not _item or (_item.created_at.year != _date.year or _item.created_at.day != _date.day):
-        print("*********scrapper_movies_publish*********")
+        print("*********scrapper_packs_publish*********")
         """Variables"""
         _items = upload_items(
             limit,
