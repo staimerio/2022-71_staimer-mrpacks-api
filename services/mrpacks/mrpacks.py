@@ -61,7 +61,7 @@ def get_items_from_website(limit, page):
     """Check if the response is valid"""
     if _result.status_code != 200:
         """Return error if the response is invalid"""
-        raise Exception(_result.text)
+        raise error_response(_result.text)
     """Get json response"""
     _result_json = _result.json()
     """Return novels"""
@@ -166,7 +166,14 @@ def build_post_content(item, description_upload, cover_url, title, credential):
         )
     else:
         for _link in item['links']:
-            _links_str = """
+            if "mega" in _link:
+                _download_img = "https://i.imgur.com/XbEkg71.png"
+            elif "mediafire" in _link:
+                _download_img = "https://i.imgur.com/vkIMY8U.png"
+            elif "drive" in _link:
+                _download_img = "https://i.imgur.com/z6MVnnE.png"
+
+            _links_str += """
             <p style="text-align: center;">
                 <a href="{1}" target="_blank" rel="noopener noreferrer">
                     <img class="alignnone size-full wp-image-5541" src="{2}" alt="{0}" title="{0}" width="300" height="60" />
@@ -211,10 +218,11 @@ def publish_item_wp(
         _title = "Pack de {0} gratis completo {1}".format(
             _item['title'], WEBSITE_YEAR)
         print(_title)
-        _cover = images.upload_images_from_urls(
-            urls=[_item['cover']],
-        )
-        _cover_url = _cover['data']['images'][-1]['link']
+        # _cover = images.upload_images_from_urls(
+        #     urls=[_item['cover']],
+        # )
+        # _cover_url = _cover['data']['images'][-1]['link']
+        _cover_url = _item['cover']
         print(_cover_url)
         """Generate content"""
         _content = build_post_content(
@@ -293,7 +301,6 @@ def upload_items(
         origin=origin,
     )
 
-
     if _items['valid'] is False:
         return []
     print("build_items_to_upload")
@@ -350,7 +357,7 @@ def publish_items(
             credential=credential,
             origin=origin,
         )
-    
+
     print("*********len(_items):*********" + str(len(_items)))
     """Check if almost one item was published"""
     if(len(_items) == 0):
@@ -359,7 +366,7 @@ def publish_items(
             _item = Scrapper(
                 key=wp_url,
                 type=constants.TYPES['images'],
-                value=page+1
+                value=page+1,
             )
             """Save chapters in database"""
             _session.add(_item)
@@ -378,6 +385,7 @@ def publish_items(
         if(len(_items) == 0):
             print("*********_item.value = *********")
             _item.value = str(int(_item.value)+1)
+            _item.created_at = _date
 
         _session.commit()
         _session.close()
