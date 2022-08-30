@@ -124,7 +124,7 @@ def build_items_to_upload(
             _item['url'], _item['id'] if 'id' in _item else None, origin)
         """Check if it has any problem"""
         print("_publication")
-        if not _publication:
+        if not _publication or not _publication['images']:
             continue
 
         """Set data"""
@@ -247,12 +247,16 @@ def publish_item_wp(
 
         if not _item['genres']:
             _item['genres'].append('Only fans')
-        _tags = [
-            {
-                u"name": _genre,
-                u"slug": slugify(_genre),
-            } for _genre in _item['genres']
-        ]
+            
+        _tags = []
+        for _genre in _item['genres']:
+            _genre_slug = slugify(_genre)
+            if _genre_slug:
+                _tags.append({
+                    u"name": _genre,
+                    u"slug": _genre_slug,
+                })
+
         _taxonomy_tags = {
             u'taxonomy': 'post_tag',
             u'items': _tags
@@ -357,6 +361,10 @@ def publish_items(
             credential=credential,
             origin=origin,
         )
+        if(len(_items) == 0):
+            print("*********_item.value = *********")
+            _item.created_at = _date
+            _session.commit()
 
     print("*********len(_items):*********" + str(len(_items)))
     """Check if almost one item was published"""
@@ -385,10 +393,9 @@ def publish_items(
         if(len(_items) == 0):
             print("*********_item.value = *********")
             _item.value = str(int(_item.value)+1)
-            _item.created_at = _date
+            _session.commit()
 
-        _session.commit()
-        _session.close()
+    _session.close()
 
     _data_respose = {
         u"items":  _items
