@@ -234,6 +234,9 @@ def publish_item_wp(
         )
         if not _item['categories']:
             _item['categories'] = ['Packs XXX']
+
+        _item['categories'].append("Packs de morritas")
+
         _categories = [
             {
                 u"name": _category,
